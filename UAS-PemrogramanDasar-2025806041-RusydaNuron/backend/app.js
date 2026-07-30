@@ -21,6 +21,7 @@ app.use('/uploads', express.static(require('path').join(__dirname, '../frontend/
 
 app.use('/api/mahasiswa', mahasiswaRoutes);
 app.use('/api/kelas', kelasRoutes);
+app.use('/api/nilai', require('./routes/nilaiRoutes'));
 app.use('/api/stats', statsRoutes);
 
 app.get('/', async (req, res) => {

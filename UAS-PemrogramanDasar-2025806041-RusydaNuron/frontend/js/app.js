@@ -465,9 +465,175 @@ darkModeToggle.addEventListener('click', () => {
     darkModeToggle.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
 });
 
+// ===== ELEMEN NILAI =====
+const nilaiForm = document.getElementById('nilai-form');
+const nilaiTbody = document.getElementById('nilai-tbody');
+const nilaiMahasiswaSelect = document.getElementById('nilai_mahasiswa_id');
+const nilaiFormTitle = document.getElementById('nilai-form-title');
+const nilaiSubmitBtn = document.getElementById('nilai-submit-btn');
+const nilaiCancelBtn = document.getElementById('nilai-cancel-btn');
+const nilaiIdField = document.getElementById('nilai-id');
+
+// Isi dropdown mahasiswa untuk form Nilai
+const loadMahasiswaDropdownNilai = async () => {
+    try {
+        const res = await fetch(`${API_URL}/mahasiswa`);
+        const data = await res.json();
+        nilaiMahasiswaSelect.innerHTML = '<option value="">-- Pilih Mahasiswa --</option>';
+        data.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m.id;
+            option.textContent = `${m.nim} - ${m.nama}`;
+            nilaiMahasiswaSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Gagal memuat mahasiswa untuk form nilai:', error);
+    }
+};
+
+// Ambil & render daftar nilai ke tabel
+const loadNilai = async () => {
+    showSpinner();
+    try {
+        const res = await fetch(`${API_URL}/nilai`);
+        const data = await res.json();
+        nilaiTbody.innerHTML = '';
+
+        data.forEach(n => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${n.nim || '-'}</td>
+                <td>${n.nama || '-'}</td>
+                <td>${n.mata_kuliah}</td>
+                <td>${n.nilai_angka}</td>
+                <td>
+                    <button class="btn-edit-nilai" data-id="${n.id}">Edit</button>
+                    <button class="btn-delete-nilai" data-id="${n.id}">Hapus</button>
+                </td>
+            `;
+            nilaiTbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Gagal memuat nilai:', error);
+        showToast('Gagal memuat data nilai', 'error');
+    } finally {
+        hideSpinner();
+    }
+};
+
+// Validasi form nilai sebelum dikirim
+const validateNilaiForm = () => {
+    let valid = true;
+    document.getElementById('error-mata_kuliah').textContent = '';
+    document.getElementById('error-nilai_angka').textContent = '';
+
+    const mataKuliah = document.getElementById('mata_kuliah').value.trim();
+    const nilaiAngka = document.getElementById('nilai_angka').value;
+
+    if (!mataKuliah) {
+        document.getElementById('error-mata_kuliah').textContent = 'Mata kuliah wajib diisi';
+        valid = false;
+    }
+    if (nilaiAngka === '' || nilaiAngka < 0 || nilaiAngka > 100) {
+        document.getElementById('error-nilai_angka').textContent = 'Nilai harus antara 0-100';
+        valid = false;
+    }
+
+    return valid;
+};
+
+const resetNilaiForm = () => {
+    nilaiForm.reset();
+    nilaiIdField.value = '';
+    nilaiFormTitle.textContent = 'Tambah Nilai';
+    nilaiSubmitBtn.textContent = 'Simpan';
+};
+
+// Submit form nilai — otomatis tambah baru atau update, tergantung ada id atau tidak
+nilaiForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!validateNilaiForm()) return;
+
+    const payload = {
+        mahasiswa_id: nilaiMahasiswaSelect.value,
+        mata_kuliah: document.getElementById('mata_kuliah').value.trim(),
+        nilai_angka: document.getElementById('nilai_angka').value
+    };
+
+    const id = nilaiIdField.value;
+    showSpinner();
+
+    try {
+        if (id) {
+            await fetch(`${API_URL}/nilai/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            showToast('Nilai berhasil diupdate');
+        } else {
+            await fetch(`${API_URL}/nilai`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            showToast('Nilai berhasil ditambahkan');
+        }
+        resetNilaiForm();
+        loadNilai();
+        loadStats();
+    } catch (error) {
+        showToast('Gagal menyimpan nilai: ' + error.message, 'error');
+    } finally {
+        hideSpinner();
+    }
+});
+
+// Klik tombol Edit atau Hapus di tabel nilai (event delegation)
+nilaiTbody.addEventListener('click', async (e) => {
+    const id = e.target.dataset.id;
+    if (!id) return;
+
+    if (e.target.classList.contains('btn-delete-nilai')) {
+        if (!confirm('Yakin hapus nilai ini?')) return;
+        showSpinner();
+        try {
+            await fetch(`${API_URL}/nilai/${id}`, { method: 'DELETE' });
+            showToast('Nilai berhasil dihapus');
+            loadNilai();
+            loadStats();
+        } catch (error) {
+            showToast('Gagal menghapus nilai: ' + error.message, 'error');
+        } finally {
+            hideSpinner();
+        }
+    }
+
+    if (e.target.classList.contains('btn-edit-nilai')) {
+        try {
+            const res = await fetch(`${API_URL}/nilai/${id}`);
+            const data = await res.json();
+
+            nilaiIdField.value = data.id;
+            nilaiMahasiswaSelect.value = data.mahasiswa_id;
+            document.getElementById('mata_kuliah').value = data.mata_kuliah;
+            document.getElementById('nilai_angka').value = data.nilai_angka;
+
+            nilaiFormTitle.textContent = 'Edit Nilai';
+            nilaiSubmitBtn.textContent = 'Update';
+        } catch (error) {
+            showToast('Gagal memuat data nilai: ' + error.message, 'error');
+        }
+    }
+});
+
+nilaiCancelBtn.addEventListener('click', resetNilaiForm);
+
 
 // ===== INISIALISASI =====
 loadKelas();
 loadMahasiswa();
 loadKelasTable();
 loadStats();
+loadMahasiswaDropdownNilai();
+loadNilai();
