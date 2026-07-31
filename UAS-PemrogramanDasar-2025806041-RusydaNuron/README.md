@@ -9,15 +9,16 @@ Aplikasi web untuk mengelola data mahasiswa, kelas, dan nilai — dibangun sebag
 
 ## Deskripsi
 
-Aplikasi ini memungkinkan pengelolaan data mahasiswa dan kelas secara penuh (CRUD), dengan relasi antar tabel (kelas → mahasiswa → nilai), REST API, serta berbagai fitur tambahan untuk meningkatkan pengalaman pengguna.
+Aplikasi ini memungkinkan pengelolaan data mahasiswa, kelas, dan nilai secara penuh (CRUD), dengan relasi antar tabel (kelas → mahasiswa → nilai), REST API, serta berbagai fitur tambahan untuk meningkatkan pengalaman pengguna.
 
 ## Fitur
 
 ### Fitur Utama
 - CRUD lengkap untuk data **Mahasiswa** (tambah, lihat, edit, hapus)
 - CRUD lengkap untuk data **Kelas** (tambah, lihat, edit, hapus)
+- CRUD lengkap untuk data **Nilai** (tambah, lihat, edit, hapus)
 - Relasi antar tabel: `kelas` → `mahasiswa` → `nilai`
-- Validasi form (field wajib, format email, dsb.)
+- Validasi form (field wajib, format email, rentang nilai, dsb.)
 
 ### Fitur Tambahan (Kreativitas)
 - **Search** — pencarian mahasiswa berdasarkan nama/NIM secara langsung (live search)
@@ -49,15 +50,18 @@ UAS-PemrogramanDasar-2025806041-RusydaNuron/
 │   │   └── db.js
 │   ├── controllers/
 │   │   ├── mahasiswaController.js
-│   │   └── kelasController.js
+│   │   ├── kelasController.js
+│   │   └── nilaiController.js
 │   ├── middleware/
 │   │   └── upload.js
 │   ├── models/
 │   │   ├── mahasiswaModel.js
-│   │   └── kelasModel.js
+│   │   ├── kelasModel.js
+│   │   └── nilaiModel.js
 │   ├── routes/
 │   │   ├── mahasiswaRoutes.js
 │   │   ├── kelasRoutes.js
+│   │   ├── nilaiRoutes.js
 │   │   └── statsRoutes.js
 │   ├── app.js
 │   ├── package.json
@@ -129,6 +133,11 @@ UAS-PemrogramanDasar-2025806041-RusydaNuron/
 | POST | `/api/kelas` | Tambah kelas baru (mendukung upload foto) |
 | PUT | `/api/kelas/:id` | Update data kelas (mendukung upload foto) |
 | DELETE | `/api/kelas/:id` | Hapus data kelas |
+| GET | `/api/nilai` | Ambil semua data nilai (termasuk nama & NIM mahasiswa) |
+| GET | `/api/nilai/:id` | Ambil data nilai berdasarkan ID |
+| POST | `/api/nilai` | Tambah nilai baru |
+| PUT | `/api/nilai/:id` | Update data nilai |
+| DELETE | `/api/nilai/:id` | Hapus data nilai |
 | GET | `/api/stats` | Ambil ringkasan statistik (total mahasiswa, total kelas, rata-rata nilai) |
 
 ## Screenshot
